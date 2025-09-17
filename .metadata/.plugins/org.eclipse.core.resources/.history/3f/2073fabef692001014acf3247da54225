@@ -1,0 +1,28 @@
+package com.rays.jdbc;
+
+import java.sql.*;
+
+public class TestConnection {
+	public static void main(String[] args) throws ClassNotFoundException, SQLException {
+//		1. Load Driver
+		Class.forName("com.mysql.cj.jdbc.Driver");
+//		2. get connection to the databases
+		Connection conn = DriverManager.getConnection("jdbc:mysql:///mydb", "root","root");
+//		3. create statement
+		Statement stmt = conn.createStatement();
+//		executeQuarry () -> search -> return dataSet   executeUpdate() -> !search -> Return integer value
+//		4. Execute Quarry and get ResultSet
+		ResultSet rs = stmt.executeQuery("select * from employe;");
+		
+		while (rs.next()) {
+			System.out.print("\t"+rs.getInt(1));
+			System.out.print("\t"+rs.getString(2));
+			System.out.print("\t"+rs.getString(3));
+			System.out.print("\t"+rs.getString(4));
+			System.out.print("\t"+rs.getInt(5)+"\n");
+			
+		}
+		conn.close();
+		
+	}
+}
