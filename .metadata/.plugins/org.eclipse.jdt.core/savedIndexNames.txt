@@ -1,5 +1,0 @@
-INDEX VERSION 1.131+C:\Users\Lenovo\eclipse-workspace\AdvanceJava\.metadata\.plugins\org.eclipse.jdt.core
-1341170364.index
-1024446143.index
-63322037.index
-2506192191.index
