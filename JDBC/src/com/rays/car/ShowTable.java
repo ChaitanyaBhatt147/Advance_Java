@@ -7,7 +7,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class ShowTable {
-	public ShowTable(String tableName) throws ClassNotFoundException, SQLException {
+	public ShowTable(String tableName) throws Exception{
 		Class.forName("com.mysql.cj.jdbc.Driver");
 		Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb","root","root");
 		Statement stmt = conn.createStatement();
