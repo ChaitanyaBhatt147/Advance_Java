@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UserModel {
 
@@ -109,23 +111,28 @@ public class UserModel {
 			bean.setPassword(rs.getString(5));
 			bean.setDob(rs.getDate(6));
 		}
+		conn.close();
 		return bean;
 	}
 
 //	Change password
 	public void changePassword(String login, String password, String newPassword) throws Exception {
-		UserBean bean = authenticator(login, password);
-		if (bean != null) {
-			Class.forName("com.mysql.cj.jdbc.Driver");
-			Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb", "root", "root");
-			PreparedStatement pstmt = conn.prepareStatement(
-					"update st_user set password = ? where id =?");
-			pstmt.setString(1, newPassword);
-			pstmt.setInt(2, bean.getId());
-			pstmt.executeUpdate();
-			System.out.println("Password changed successfully");
+		if (password != newPassword) {
+			UserBean bean = authenticator(login, password);
+			if (bean != null) {
+				Class.forName("com.mysql.cj.jdbc.Driver");
+				Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb", "root", "root");
+				PreparedStatement pstmt = conn.prepareStatement("update st_user set password = ? where id =?");
+				pstmt.setString(1, newPassword);
+				pstmt.setInt(2, bean.getId());
+				pstmt.executeUpdate();
+				conn.close();
+				System.out.println("Password changed successfully");
+			} else {
+				throw new RuntimeException("Wrong Username or Password");
+			}			
 		} else {
-			throw new RuntimeException("Wrong Username or Password");
+			throw new RuntimeException("Both the oldPassword and newPasswoed both are same.");
 		}
 
 	}
@@ -138,5 +145,51 @@ public class UserModel {
 		} else {
 			throw new RuntimeException("User does not exist.");
 		}
+	}
+	
+//	find by id
+	public UserBean findById(int id) throws Exception {
+		Class.forName("com.mysql.cj.jdbc.Driver");
+		Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb", "root", "root");
+		PreparedStatement pstmt = conn.prepareStatement("select * from st_user where id = ?");
+		pstmt.setInt(1, id);
+		ResultSet rs = pstmt.executeQuery();
+		UserBean bean = null;
+		while (rs.next()) {
+			bean = new UserBean();
+			bean.setId(rs.getInt(1));
+			bean.setFirstName(rs.getString(2));
+			bean.setLastName(rs.getString(3));
+			bean.setLogin(rs.getString(4));
+			bean.setPassword(rs.getString(5));
+			bean.setDob(rs.getDate(6));
+		}
+		return bean;
+	}
+	
+//	Search() will search multiple record.
+	
+	public List search(UserBean bean) throws Exception {
+		ArrayList list = new ArrayList();
+		StringBuffer sql = new StringBuffer("select * from st_user");
+		
+		Class.forName("com.mysql.cj.jdbc.Driver");
+		Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb", "root", "root");
+		PreparedStatement pstmt = conn.prepareStatement(sql.toString());
+		ResultSet rs = pstmt.executeQuery();
+		
+		while (rs.next()) {
+			bean = new UserBean();
+			bean.setId(rs.getInt(1));
+			bean.setFirstName(rs.getString(2));
+			bean.setLastName(rs.getString(3));
+			bean.setLogin(rs.getString(4));
+			bean.setPassword(rs.getString(5));
+			bean.setDob(rs.getDate(6));
+			list.add(bean);
+			
+		}
+		
+		return list;
 	}
 }

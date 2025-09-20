@@ -1,6 +1,8 @@
 package com.rays.preparedStatement;
 
 import java.text.SimpleDateFormat;
+import java.util.Iterator;
+import java.util.List;
 
 public class TestUserModel {
 	public static void main(String[] args) throws Exception {
@@ -10,7 +12,8 @@ public class TestUserModel {
 //		testFindByLogin();
 //		testAuthenticator();
 //		testChangePassword();
-		testForgetPassword();
+//		testForgetPassword();
+		testSearch();
 	}
 	public static void testAdd() throws Exception{
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -72,11 +75,39 @@ public class TestUserModel {
 	
 	public static void testChangePassword() throws Exception {
 		UserModel model = new UserModel();
-		model.changePassword("bhattchaitanya43@gmail.com", "Chetan147@", "Chetan2001@");
+		model.changePassword("bhattchaitanya43@gmail.com", "Chetan2001@", "Chetan147@");
 	}
 	
 	public static void testForgetPassword() throws Exception {
 		UserModel model = new UserModel();
 		model.forgetPassword("bhattchaitanya43@gmail.com");
+	}
+	
+	public static void testFindById() throws Exception {
+		UserModel model = new UserModel();
+		UserBean existBean = model.findById(1);
+		
+		if (existBean != null) {
+			System.out.println("User alrady Exist");
+		}
+		else {
+			System.out.println("User dosenot Exist");			
+		}
+	}
+	
+	public static void testSearch() throws Exception {
+		UserModel model = new UserModel();
+		List list = model.search(null);
+		Iterator<UserBean> it = list.iterator();
+		
+		while (it.hasNext()) {
+			UserBean bean = (UserBean) it.next();
+			System.out.print(bean.getId());
+			System.out.print("\t"+bean.getFirstName());
+			System.out.print("\t"+bean.getLastName());
+			System.out.print("\t"+bean.getLogin());
+			System.out.print("\t"+bean.getPassword());
+			System.out.println("\t"+bean.getDob());
+		}
 	}
 }
