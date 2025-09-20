@@ -116,7 +116,13 @@ public class UserModel {
 	public void changePassword(String login, String password, String newPassword) throws Exception {
 		UserBean bean = authenticator(login, password);
 		if (bean != null) {
-			bean.setPassword(newPassword);
+			Class.forName("com.mysql.cj.jdbc.Driver");
+			Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb", "root", "root");
+			PreparedStatement pstmt = conn.prepareStatement(
+					"update st_user set password = ? where id =?");
+			pstmt.setString(1, newPassword);
+			pstmt.setInt(2, bean.getId());
+			pstmt.executeUpdate();
 			System.out.println("Password changed successfully");
 		} else {
 			throw new RuntimeException("Wrong Username or Password");
