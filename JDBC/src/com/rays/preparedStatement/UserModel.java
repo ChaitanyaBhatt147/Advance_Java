@@ -130,7 +130,7 @@ public class UserModel {
 				System.out.println("Password changed successfully");
 			} else {
 				throw new RuntimeException("Wrong Username or Password");
-			}			
+			}
 		} else {
 			throw new RuntimeException("Both the oldPassword and newPasswoed both are same.");
 		}
@@ -141,12 +141,12 @@ public class UserModel {
 	public void forgetPassword(String login) throws Exception {
 		UserBean bean = findByLogin(login);
 		if (bean != null) {
-			System.out.println("Password: "+ bean.getPassword());
+			System.out.println("Password: " + bean.getPassword());
 		} else {
 			throw new RuntimeException("User does not exist.");
 		}
 	}
-	
+
 //	find by id
 	public UserBean findById(int id) throws Exception {
 		Class.forName("com.mysql.cj.jdbc.Driver");
@@ -166,18 +166,39 @@ public class UserModel {
 		}
 		return bean;
 	}
-	
+
 //	Search() will search multiple record.
-	
+//	if SQL injunction is true then we can append as many as quarry in one quarry
+
 	public List search(UserBean bean) throws Exception {
 		ArrayList list = new ArrayList();
-		StringBuffer sql = new StringBuffer("select * from st_user");
-		
+		StringBuffer sql = new StringBuffer("select * from st_user where 1 = 1");
+		if (bean != null) {
+			if (bean.getFirstName() != null && bean.getFirstName().length() > 0) {
+				sql.append(" and firstName like '%" + bean.getFirstName() + "%'");
+			}
+			if (bean.getId() > 0 && bean.getId() < nextPk()) {
+				sql.append(" and id like '%" + bean.getId() + "%'");
+			}
+			if (bean.getLastName() != null && bean.getLastName().length() > 0) {
+				sql.append(" and lastName like '%" + bean.getLastName() + "%'");
+			}
+			if (bean.getLogin() != null && bean.getLogin().length() > 0) {
+				sql.append(" and login like '%" + bean.getLogin() + "%'");
+			}
+			if (bean.getPassword() != null && bean.getPassword().length() > 0) {
+				sql.append(" and password like '%" + bean.getPassword() + "%'");
+			}
+			if (bean.getDob() != null && bean.getDob().getTime() > 0) {
+				sql.append(" and dob like '" + new java.sql.Date(bean.getDob().getTime())+"'");
+			}
+		}
+
 		Class.forName("com.mysql.cj.jdbc.Driver");
 		Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb", "root", "root");
 		PreparedStatement pstmt = conn.prepareStatement(sql.toString());
 		ResultSet rs = pstmt.executeQuery();
-		
+
 		while (rs.next()) {
 			bean = new UserBean();
 			bean.setId(rs.getInt(1));
@@ -187,9 +208,9 @@ public class UserModel {
 			bean.setPassword(rs.getString(5));
 			bean.setDob(rs.getDate(6));
 			list.add(bean);
-			
+
 		}
-		
+
 		return list;
 	}
 }
