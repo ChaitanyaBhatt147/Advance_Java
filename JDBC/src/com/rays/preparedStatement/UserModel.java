@@ -6,15 +6,22 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ResourceBundle;
 
 public class UserModel {
+	
+	ResourceBundle rb = ResourceBundle.getBundle("com.rays.bundel.app");
+	String url = rb.getString("url");
+	String driver = rb.getString("driver");
+	String username = rb.getString("username");
+	String password = rb.getString("password");
 
 //	Generate primary key
 	public int nextPk() throws Exception {
 		int pk = 0;
 
-		Class.forName("com.mysql.cj.jdbc.Driver");
-		Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb", "root", "root");
+		Class.forName(driver);
+		Connection conn = DriverManager.getConnection(url,username,password);
 		PreparedStatement pstmt = conn.prepareStatement("select max(id) from st_user");
 		ResultSet rs = pstmt.executeQuery();
 		while (rs.next()) {
@@ -26,57 +33,84 @@ public class UserModel {
 
 //	insert record
 	public void add(UserBean bean) throws Exception {
-		UserBean existBean = findByLogin(bean.getLogin());
-
-		if (existBean != null) {
-			throw new RuntimeException("User alrady Exist");
+		Connection conn = null;
+		try {
+			UserBean existBean = findByLogin(bean.getLogin());
+			
+			if (existBean != null) {
+				throw new RuntimeException("User alrady Exist");
+			}
+			Class.forName(driver);
+			conn = DriverManager.getConnection(url,username,password);
+			conn.setAutoCommit(false);
+			PreparedStatement pstmt = conn.prepareStatement("insert into st_user values (?,?,?,?,?,?)");
+			pstmt.setInt(1, nextPk());
+			pstmt.setString(2, bean.getFirstName());
+			pstmt.setString(3, bean.getLastName());
+			pstmt.setString(4, bean.getLogin());
+			pstmt.setString(5, bean.getPassword());
+			pstmt.setDate(6, new java.sql.Date(bean.getDob().getTime()));
+			int i = pstmt.executeUpdate();
+			conn.commit();
+			System.out.println("Data inserted successfully: " + i);
+		} catch (Exception e) {
+			System.out.println("Transaction is rolled back");
+			conn.rollback();
+		}finally {
+			conn.close();			
 		}
-		Class.forName("com.mysql.cj.jdbc.Driver");
-		Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb", "root", "root");
-		PreparedStatement pstmt = conn.prepareStatement("insert into st_user values (?,?,?,?,?,?)");
-		pstmt.setInt(1, nextPk());
-		pstmt.setString(2, bean.getFirstName());
-		pstmt.setString(3, bean.getLastName());
-		pstmt.setString(4, bean.getLogin());
-		pstmt.setString(5, bean.getPassword());
-		pstmt.setDate(6, new java.sql.Date(bean.getDob().getTime()));
-		int i = pstmt.executeUpdate();
-		System.out.println("Data inserted successfully: " + i);
-		conn.close();
 	}
 
 //	delete record
 	public void Delete(UserBean bean) throws Exception {
-		Class.forName("com.mysql.cj.jdbc.Driver");
-		Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb", "root", "root");
-		PreparedStatement pstmt = conn.prepareStatement("delete from st_user where id = ?");
-		pstmt.setInt(1, bean.getId());
-		pstmt.executeUpdate();
-		System.out.println("Data deleted successfully.");
-		conn.close();
+		Connection conn = null;
+		try {
+			Class.forName(driver);
+			conn = DriverManager.getConnection(url,username,password);
+			conn.setAutoCommit(false);
+			PreparedStatement pstmt = conn.prepareStatement("delete from st_user where id = ?");
+			pstmt.setInt(1, bean.getId());
+			pstmt.executeUpdate();
+			conn.commit();
+			System.out.println("Data deleted successfully.");			
+		} catch (Exception e) {
+			System.out.println("Transaction is rolled back");
+			conn.rollback();
+		}finally {
+			conn.close();			
+		}
 	}
 
 //	update record
 	public void Update(UserBean bean) throws Exception {
-		Class.forName("com.mysql.cj.jdbc.Driver");
-		Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb", "root", "root");
-		PreparedStatement pstmt = conn.prepareStatement(
-				"update st_user set firstName = ?, lastName = ?, login = ?, password = ?, dob = ? where id =?");
-		pstmt.setString(1, bean.getFirstName());
-		pstmt.setString(2, bean.getLastName());
-		pstmt.setString(3, bean.getLogin());
-		pstmt.setString(4, bean.getPassword());
-		pstmt.setDate(5, new java.sql.Date(bean.getDob().getTime()));
-		pstmt.setInt(6, bean.getId());
-		pstmt.executeUpdate();
-		System.out.println("Data Upadated successfully.");
-		conn.close();
+		Connection conn = null;
+		try {
+			Class.forName(driver);
+			conn = DriverManager.getConnection(url,username,password);
+			conn.setAutoCommit(false);
+			PreparedStatement pstmt = conn.prepareStatement(
+					"update st_user set firstName = ?, lastName = ?, login = ?, password = ?, dob = ? where id =?");
+			pstmt.setString(1, bean.getFirstName());
+			pstmt.setString(2, bean.getLastName());
+			pstmt.setString(3, bean.getLogin());
+			pstmt.setString(4, bean.getPassword());
+			pstmt.setDate(5, new java.sql.Date(bean.getDob().getTime()));
+			pstmt.setInt(6, bean.getId());
+			pstmt.executeUpdate();
+			conn.commit();
+			System.out.println("Data Upadated successfully.");		
+		} catch (Exception e) {
+			System.out.println("Transaction is rolled back");
+			conn.rollback();
+		}finally {
+			conn.close();			
+		}
 	}
 
 //	find by login id
 	public UserBean findByLogin(String login) throws Exception {
-		Class.forName("com.mysql.cj.jdbc.Driver");
-		Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb", "root", "root");
+		Class.forName(driver);
+		Connection conn = DriverManager.getConnection(url,username,password);
 		PreparedStatement pstmt = conn.prepareStatement("select * from st_user where login = ?");
 		pstmt.setString(1, login);
 		ResultSet rs = pstmt.executeQuery();
@@ -95,8 +129,8 @@ public class UserModel {
 
 //	User Authentication
 	public UserBean authenticator(String login, String password) throws Exception {
-		Class.forName("com.mysql.cj.jdbc.Driver");
-		Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb", "root", "root");
+		Class.forName(driver);
+		Connection conn = DriverManager.getConnection(url,username,password);
 		PreparedStatement pstmt = conn.prepareStatement("select * from st_user where login = ? and password = ?");
 		pstmt.setString(1, login);
 		pstmt.setString(2, password);
@@ -117,22 +151,32 @@ public class UserModel {
 
 //	Change password
 	public void changePassword(String login, String password, String newPassword) throws Exception {
-		if (password != newPassword) {
-			UserBean bean = authenticator(login, password);
-			if (bean != null) {
-				Class.forName("com.mysql.cj.jdbc.Driver");
-				Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb", "root", "root");
-				PreparedStatement pstmt = conn.prepareStatement("update st_user set password = ? where id =?");
-				pstmt.setString(1, newPassword);
-				pstmt.setInt(2, bean.getId());
-				pstmt.executeUpdate();
-				conn.close();
-				System.out.println("Password changed successfully");
+		Connection conn = null;
+		try {
+			if (password != newPassword) {
+				UserBean bean = authenticator(login, password);
+				
+				if (bean != null) {
+					Class.forName(driver);
+					conn = DriverManager.getConnection(url,username,password);
+					conn.setAutoCommit(false);
+					PreparedStatement pstmt = conn.prepareStatement("update st_user set password = ? where id =?");
+					pstmt.setString(1, newPassword);
+					pstmt.setInt(2, bean.getId());
+					pstmt.executeUpdate();
+					conn.commit();
+					System.out.println("Password changed successfully");
+				} else {
+					throw new RuntimeException("Wrong Username or Password");
+				}
 			} else {
-				throw new RuntimeException("Wrong Username or Password");
+				throw new RuntimeException("Both the oldPassword and newPasswoed both are same.");
 			}
-		} else {
-			throw new RuntimeException("Both the oldPassword and newPasswoed both are same.");
+		} catch (Exception e) {
+			System.out.println("Transaction is rolled back");
+			conn.rollback();
+		}finally {
+			conn.close();			
 		}
 
 	}
@@ -149,8 +193,8 @@ public class UserModel {
 
 //	find by id
 	public UserBean findById(int id) throws Exception {
-		Class.forName("com.mysql.cj.jdbc.Driver");
-		Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb", "root", "root");
+		Class.forName(driver);
+		Connection conn = DriverManager.getConnection(url,username,password);
 		PreparedStatement pstmt = conn.prepareStatement("select * from st_user where id = ?");
 		pstmt.setInt(1, id);
 		ResultSet rs = pstmt.executeQuery();
@@ -194,8 +238,8 @@ public class UserModel {
 			}
 		}
 
-		Class.forName("com.mysql.cj.jdbc.Driver");
-		Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb", "root", "root");
+		Class.forName(driver);
+		Connection conn = DriverManager.getConnection(url,username,password);
 		PreparedStatement pstmt = conn.prepareStatement(sql.toString());
 		ResultSet rs = pstmt.executeQuery();
 

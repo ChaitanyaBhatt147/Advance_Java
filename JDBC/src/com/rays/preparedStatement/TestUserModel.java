@@ -97,8 +97,8 @@ public class TestUserModel {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 		UserModel model = new UserModel();
 		UserBean bean = new UserBean();
-//		bean.setFirstName("ita");
-		bean.setDob(sdf.parse("2001-07-17"));
+		bean.setFirstName("ita");
+//		bean.setDob(sdf.parse("2001-07-17"));
 //		bean.setId(2);
 
 		List list = model.search(bean);
