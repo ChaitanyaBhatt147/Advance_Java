@@ -1,49 +1,43 @@
 package com.rays.preparedStatement;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ResourceBundle;
+
+import com.rays.util.JDBCDataSource;
 
 public class UserModel {
-	
-	ResourceBundle rb = ResourceBundle.getBundle("com.rays.bundel.app");
-	String url = rb.getString("url");
-	String driver = rb.getString("driver");
-	String username = rb.getString("username");
-	String password = rb.getString("password");
 
 //	Generate primary key
 	public int nextPk() throws Exception {
 		int pk = 0;
-
-		Class.forName(driver);
-		Connection conn = DriverManager.getConnection(url,username,password);
-		PreparedStatement pstmt = conn.prepareStatement("select max(id) from st_user");
+		Connection comm = null;
+		comm = JDBCDataSource.getConnection();
+		PreparedStatement pstmt = comm.prepareStatement("select max(id) from st_user");
 		ResultSet rs = pstmt.executeQuery();
 		while (rs.next()) {
 			pk = rs.getInt(1);
 		}
-		conn.close();
+		comm.close();
 		return pk + 1;
 	}
 
 //	insert record
 	public void add(UserBean bean) throws Exception {
-		Connection conn = null;
+		Connection comm = null;
 		try {
 			UserBean existBean = findByLogin(bean.getLogin());
-			
+
 			if (existBean != null) {
 				throw new RuntimeException("User alrady Exist");
 			}
-			Class.forName(driver);
-			conn = DriverManager.getConnection(url,username,password);
-			conn.setAutoCommit(false);
-			PreparedStatement pstmt = conn.prepareStatement("insert into st_user values (?,?,?,?,?,?)");
+			comm = JDBCDataSource.getConnection();
+			Statement stmt = comm.createStatement();
+			comm.setAutoCommit(false);
+			PreparedStatement pstmt = comm.prepareStatement("insert into st_user values (?,?,?,?,?,?)");
 			pstmt.setInt(1, nextPk());
 			pstmt.setString(2, bean.getFirstName());
 			pstmt.setString(3, bean.getLastName());
@@ -51,13 +45,13 @@ public class UserModel {
 			pstmt.setString(5, bean.getPassword());
 			pstmt.setDate(6, new java.sql.Date(bean.getDob().getTime()));
 			int i = pstmt.executeUpdate();
-			conn.commit();
+			comm.commit();
 			System.out.println("Data inserted successfully: " + i);
 		} catch (Exception e) {
 			System.out.println("Transaction is rolled back");
-			conn.rollback();
-		}finally {
-			conn.close();			
+			comm.rollback();
+		} finally {
+			comm.close();
 		}
 	}
 
@@ -65,19 +59,19 @@ public class UserModel {
 	public void Delete(UserBean bean) throws Exception {
 		Connection conn = null;
 		try {
-			Class.forName(driver);
-			conn = DriverManager.getConnection(url,username,password);
+			conn = JDBCDataSource.getConnection();
+			Statement stmt = conn.createStatement();
 			conn.setAutoCommit(false);
 			PreparedStatement pstmt = conn.prepareStatement("delete from st_user where id = ?");
 			pstmt.setInt(1, bean.getId());
 			pstmt.executeUpdate();
 			conn.commit();
-			System.out.println("Data deleted successfully.");			
+			System.out.println("Data deleted successfully.");
 		} catch (Exception e) {
 			System.out.println("Transaction is rolled back");
 			conn.rollback();
-		}finally {
-			conn.close();			
+		} finally {
+			conn.close();
 		}
 	}
 
@@ -85,8 +79,8 @@ public class UserModel {
 	public void Update(UserBean bean) throws Exception {
 		Connection conn = null;
 		try {
-			Class.forName(driver);
-			conn = DriverManager.getConnection(url,username,password);
+			conn = JDBCDataSource.getConnection();
+			Statement stmt = conn.createStatement();
 			conn.setAutoCommit(false);
 			PreparedStatement pstmt = conn.prepareStatement(
 					"update st_user set firstName = ?, lastName = ?, login = ?, password = ?, dob = ? where id =?");
@@ -98,19 +92,20 @@ public class UserModel {
 			pstmt.setInt(6, bean.getId());
 			pstmt.executeUpdate();
 			conn.commit();
-			System.out.println("Data Upadated successfully.");		
+			System.out.println("Data Upadated successfully.");
 		} catch (Exception e) {
 			System.out.println("Transaction is rolled back");
 			conn.rollback();
-		}finally {
-			conn.close();			
+		} finally {
+			conn.close();
 		}
 	}
 
 //	find by login id
 	public UserBean findByLogin(String login) throws Exception {
-		Class.forName(driver);
-		Connection conn = DriverManager.getConnection(url,username,password);
+		Connection conn = null;
+		conn = JDBCDataSource.getConnection();
+		Statement stmt = conn.createStatement();
 		PreparedStatement pstmt = conn.prepareStatement("select * from st_user where login = ?");
 		pstmt.setString(1, login);
 		ResultSet rs = pstmt.executeQuery();
@@ -124,13 +119,15 @@ public class UserModel {
 			bean.setPassword(rs.getString(5));
 			bean.setDob(rs.getDate(6));
 		}
+		conn.close();
 		return bean;
 	}
 
 //	User Authentication
 	public UserBean authenticator(String login, String password) throws Exception {
-		Class.forName(driver);
-		Connection conn = DriverManager.getConnection(url,username,password);
+		Connection conn = null;
+		conn = JDBCDataSource.getConnection();
+		Statement stmt = conn.createStatement();
 		PreparedStatement pstmt = conn.prepareStatement("select * from st_user where login = ? and password = ?");
 		pstmt.setString(1, login);
 		pstmt.setString(2, password);
@@ -155,10 +152,10 @@ public class UserModel {
 		try {
 			if (password != newPassword) {
 				UserBean bean = authenticator(login, password);
-				
+
 				if (bean != null) {
-					Class.forName(driver);
-					conn = DriverManager.getConnection(url,username,password);
+					conn = JDBCDataSource.getConnection();
+					Statement stmt = conn.createStatement();
 					conn.setAutoCommit(false);
 					PreparedStatement pstmt = conn.prepareStatement("update st_user set password = ? where id =?");
 					pstmt.setString(1, newPassword);
@@ -175,8 +172,8 @@ public class UserModel {
 		} catch (Exception e) {
 			System.out.println("Transaction is rolled back");
 			conn.rollback();
-		}finally {
-			conn.close();			
+		} finally {
+			conn.close();
 		}
 
 	}
@@ -193,8 +190,9 @@ public class UserModel {
 
 //	find by id
 	public UserBean findById(int id) throws Exception {
-		Class.forName(driver);
-		Connection conn = DriverManager.getConnection(url,username,password);
+		Connection conn = null;
+		conn = JDBCDataSource.getConnection();
+		Statement stmt = conn.createStatement();
 		PreparedStatement pstmt = conn.prepareStatement("select * from st_user where id = ?");
 		pstmt.setInt(1, id);
 		ResultSet rs = pstmt.executeQuery();
@@ -208,6 +206,7 @@ public class UserModel {
 			bean.setPassword(rs.getString(5));
 			bean.setDob(rs.getDate(6));
 		}
+		conn.close();
 		return bean;
 	}
 
@@ -234,12 +233,13 @@ public class UserModel {
 				sql.append(" and password like '%" + bean.getPassword() + "%'");
 			}
 			if (bean.getDob() != null && bean.getDob().getTime() > 0) {
-				sql.append(" and dob like '" + new java.sql.Date(bean.getDob().getTime())+"'");
+				sql.append(" and dob like '" + new java.sql.Date(bean.getDob().getTime()) + "'");
 			}
 		}
 
-		Class.forName(driver);
-		Connection conn = DriverManager.getConnection(url,username,password);
+		Connection conn = null;
+		conn = JDBCDataSource.getConnection();
+		Statement stmt = conn.createStatement();
 		PreparedStatement pstmt = conn.prepareStatement(sql.toString());
 		ResultSet rs = pstmt.executeQuery();
 
@@ -254,8 +254,7 @@ public class UserModel {
 			list.add(bean);
 
 		}
-		
-
+		conn.close();
 		return list;
 	}
 }

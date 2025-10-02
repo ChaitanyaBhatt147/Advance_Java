@@ -21,7 +21,7 @@ public final class JDBCDataSource {
 		if (dataSource == null) {
 			dataSource = new JDBCDataSource();
 			dataSource.cpds = new ComboPooledDataSource();
-			ResourceBundle rb =ResourceBundle.getBundle("com.rays.bundle.app");
+			ResourceBundle rb =ResourceBundle.getBundle("com.rays.bundel.app");
 			try {
 				dataSource.cpds.setDriverClass(rb.getString("driver"));
 				dataSource.cpds.setJdbcUrl(rb.getString("url"));
